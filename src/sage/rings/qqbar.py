@@ -3862,7 +3862,27 @@ class AlgebraicNumber_base(sage.structure.element.FieldElement):
 
             sage: AA(sqrt(2)) * AA(sqrt(8))  # indirect doctest                         # needs sage.symbolic
             4.000000000000000?
+
+        Check that trivial multiplications do not create complicated expression trees::
+
+            sage: y = polygen(QQ, 'y')
+            sage: r = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r1 = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r2 = AA.polynomial_root(y^2 - 3, RIF(1.7, 1.8))
+            sage: r = r1 + r2
+            sage: (r * 1) is r
+            True
+            sage: (1 * r) is r
+            True
+            sage: type((0 * r)._descr)
+            <class 'sage.rings.qqbar.ANRational'>
         """
+        if self._value.is_zero() or other._value.is_zero():
+            return self.parent().zero()
+        if self._value.is_one():
+            return other
+        if other._value.is_one():
+            return self
         sk = type(self._descr)
         ok = type(other._descr)
         return type(self)(_binop_algo[sk, ok](self, other, operator.mul))
@@ -3879,9 +3899,27 @@ class AlgebraicNumber_base(sage.structure.element.FieldElement):
             Traceback (most recent call last):
             ...
             ZeroDivisionError: division by zero in algebraic field
+
+        Check that trivial divisions do not create complicated expression trees::
+
+            sage: y = polygen(QQ, 'y')
+            sage: r = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r1 = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r2 = AA.polynomial_root(y^2 - 3, RIF(1.7, 1.8))
+            sage: r = r1 + r2
+            sage: (r / 1) is r
+            True
+            sage: type((0 / r)._descr)
+            <class 'sage.rings.qqbar.ANRational'>
         """
         if not other:
             raise ZeroDivisionError("division by zero in algebraic field")
+        if self._value.is_zero():
+            return self.parent().zero()
+        if self._value.is_one():
+            return ~other
+        if other._value.is_one():
+            return self
         sk = type(self._descr)
         ok = type(other._descr)
         return type(self)(_binop_algo[sk, ok](self, other, operator.truediv))
@@ -3901,6 +3939,8 @@ class AlgebraicNumber_base(sage.structure.element.FieldElement):
         """
         if not self:
             raise ZeroDivisionError("division by zero in algebraic field")
+        if self._value.is_one():
+            return self
         return type(self)(self._descr.invert(self))
 
     def _add_(self, other):
@@ -3911,7 +3951,24 @@ class AlgebraicNumber_base(sage.structure.element.FieldElement):
             sage: rt1, rt2 = (x^2 - x - 1).roots(ring=AA, multiplicities=False)
             sage: rt1 + rt2 # indirect doctest
             1.000000000000000?
+
+        Check that trivial addition does not create additional depth
+        in an expression tree::
+
+            sage: y = polygen(QQ, 'y')
+            sage: r = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r1 = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r2 = AA.polynomial_root(y^2 - 3, RIF(1.7, 1.8))
+            sage: r = r1 + r2
+            sage: (r + 0) is r
+            True
+            sage: (0 + r) is r
+            True
         """
+        if self._value.is_zero():
+            return other
+        if other._value.is_zero():
+            return self
         sk = type(self._descr)
         ok = type(other._descr)
         return type(self)(_binop_algo[sk, ok](self, other, operator.add))
@@ -3922,7 +3979,22 @@ class AlgebraicNumber_base(sage.structure.element.FieldElement):
 
             sage: AA(golden_ratio) * 2 - AA(5).sqrt()  # indirect doctest               # needs sage.symbolic
             1.000000000000000?
+
+        Check that trivial subtraction does not create additional depth
+        in an expression tree::
+
+            sage: y = polygen(QQ, 'y')
+            sage: r = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r1 = AA.polynomial_root(y^2 - 2, RIF(1.4, 1.5))
+            sage: r2 = AA.polynomial_root(y^2 - 3, RIF(1.7, 1.8))
+            sage: r = r1 + r2
+            sage: (r - 0) is r
+            True
         """
+        if self._value.is_zero():
+            return -other
+        if other._value.is_zero():
+            return self
         sk = type(self._descr)
         ok = type(other._descr)
         return type(self)(_binop_algo[sk, ok](self, other, operator.sub))
