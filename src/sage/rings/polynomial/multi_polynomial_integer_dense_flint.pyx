@@ -1,15 +1,27 @@
+r"""
+Multivariate Polynomials over the integers using FLINT's fmpz_mpoly
+"""
+# ****************************************************************************
+#       Copyright (C) 2026 Vincent Delecroix <20100.delecroix@gmail.com>
 #
-# Multivariate Polynomials over ZZ using FLINT's fmpz_mpoly
+#  Distributed under the terms of the GNU General Public License (GPL)
 #
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
+#
+#  The full text of the GPL is available at:
+#
+#                  https://www.gnu.org/licenses/
+# ****************************************************************************
 
-# Import Python and Sage dependencies
-from sage.rings.polynomial.multi_polynomial_element import MPolynomialElement
-from sage.rings.polynomial.multi_polynomial_ring import MPolynomialRing_base
-from sage.rings.integer_ring import ZZ, Integer
-from sage.structure.parent import Parent
-from sage.structure.element import RingElement
+from sage.rings.polynomial.multi_polynomial_element cimport MPolynomialElement
+from sage.rings.polynomial.multi_polynomial_ring cimport MPolynomialRing_base
+from sage.rings.integer_ring cimport ZZ, Integer
+from sage.structure.parent cimport Parent
+from sage.structure.element cimport RingElement
 
-# Import FLINT types and functions from SageMath's existing bindings
 from sage.libs.flint.types cimport fmpz_t, fmpz_mpoly_t, ordering_t, ORDERING_LEX, ORDERING_DEGLEX, ORDERING_DEGREVLEX
 from sage.libs.flint.fmpz_mpoly cimport (
     fmpz_mpoly_init, fmpz_mpoly_clear, fmpz_mpoly_set, fmpz_mpoly_swap,
@@ -24,14 +36,12 @@ from sage.libs.flint.fmpz_mpoly cimport (
 )
 from sage.libs.flint.fmpz cimport fmpz_init, fmpz_clear, fmpz_set_si, fmpz_set_mpz, fmpz_get_mpz
 
-# Map Sage ordering strings to FLINT ordering_t
 ORDERING_MAP = {
     'lex': ORDERING_LEX,
     'deglex': ORDERING_DEGLEX,
     'degrevlex': ORDERING_DEGREVLEX,
 }
 
-# Parent class for the ring
 class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
     """
     A multivariate polynomial ring over the integers using FLINT's ``fmpz_mpoly``.
@@ -49,6 +59,8 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         sage: x + y
         x + y
     """
+    Element = MPolynomial_integer_dense_flint
+
     def __init__(self, n, names=None, order='lex'):
         """
         Initialize a multivariate polynomial ring over ZZ using FLINT.
@@ -287,10 +299,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         else:
             raise TypeError(f"Cannot convert {type(x)} to a multivariate polynomial")
 
-    # Element class (defined below)
-    Element = None
 
-# Element class for multivariate polynomials
 cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
     """
     An element of a multivariate polynomial ring over the integers using FLINT's ``fmpz_mpoly``.
@@ -369,7 +378,6 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         """
         return hash(str(self))
 
-    # Arithmetic operations
     def __add__(self, other):
         """
         Add two polynomials.
@@ -509,7 +517,6 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         fmpz_mpoly_clear(temp)
         return self._parent._new_element(result)
 
-    # Comparison
     def __eq__(self, other):
         """
         Check equality with another polynomial.
@@ -695,6 +702,3 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
         fmpz_mpoly_gcd(result, self._poly, other._poly)
         return self._parent._new_element(result)
-
-# Assign the Element class to the parent
-MPolynomialRing_integer_dense_flint.Element = MPolynomial_integer_dense_flint
