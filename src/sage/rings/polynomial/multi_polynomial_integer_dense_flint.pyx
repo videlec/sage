@@ -5,22 +5,24 @@
 # Import Python and Sage dependencies
 from sage.rings.polynomial.multi_polynomial_element import MPolynomialElement
 from sage.rings.polynomial.multi_polynomial_ring import MPolynomialRing_base
-from sage.rings.integer_ring import ZZ
+from sage.rings.integer_ring import ZZ, Integer
 from sage.structure.parent import Parent
 from sage.structure.element import RingElement
-from sage.libs.flint.flint_integer cimport fmpz
 
-# Import Cython declarations
-from .multi_polynomial_integer_dense_flint cimport (
-    fmpz_mpoly_t, ordering_t, ORDERING_LEX, ORDERING_DEGLEX, ORDERING_DEGREVLEX,
-    fmpz_mpoly_init, fmpz_mpoly_clear, fmpz_mpoly_add, fmpz_mpoly_sub,
-    fmpz_mpoly_mul, fmpz_mpoly_neg, fmpz_mpoly_gen, fmpz_mpoly_one,
-    fmpz_mpoly_zero, fmpz_mpoly_is_zero, fmpz_mpoly_is_one, fmpz_mpoly_get_str,
-    fmpz_mpoly_set_str, fmpz_mpoly_total_degree, fmpz_mpoly_length,
+# Import FLINT types and functions from SageMath's existing bindings
+from sage.libs.flint.types cimport fmpz_t, fmpz_mpoly_t, ordering_t, ORDERING_LEX, ORDERING_DEGLEX, ORDERING_DEGREVLEX
+from sage.libs.flint.fmpz_mpoly cimport (
+    fmpz_mpoly_init, fmpz_mpoly_clear, fmpz_mpoly_set, fmpz_mpoly_swap,
+    fmpz_mpoly_add, fmpz_mpoly_sub, fmpz_mpoly_mul, fmpz_mpoly_neg,
+    fmpz_mpoly_gen, fmpz_mpoly_one, fmpz_mpoly_zero,
+    fmpz_mpoly_get_str, fmpz_mpoly_set_str,
+    fmpz_mpoly_total_degree, fmpz_mpoly_length,
     fmpz_mpoly_get_term_exp, fmpz_mpoly_get_term_coeff_fmpz, fmpz_mpoly_set_coeff_fmpz,
-    fmpz_mpoly_evaluate_one_fmpz, fmpz_mpoly_scalar_mul_fmpz, fmpz_mpoly_equal,
-    fmpz_mpoly_set, fmpz_mpoly_gcd
+    fmpz_mpoly_evaluate_one_fmpz, fmpz_mpoly_scalar_mul_fmpz,
+    fmpz_mpoly_equal, fmpz_mpoly_is_zero, fmpz_mpoly_is_one,
+    fmpz_mpoly_gcd
 )
+from sage.libs.flint.fmpz cimport fmpz_init, fmpz_clear, fmpz_set_si, fmpz_set_mpz, fmpz_get_mpz
 
 # Map Sage ordering strings to FLINT ordering_t
 ORDERING_MAP = {
@@ -111,7 +113,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         """
         Construct an element of this ring.
         """
-        if isinstance(x, int):
+        if isinstance(x, (int, Integer)):
             cdef fmpz_mpoly_t poly
             fmpz_mpoly_init(poly, self._n, self._flint_order)
             if x == 0:
@@ -121,7 +123,10 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
             else:
                 cdef fmpz_t c
                 fmpz_init(c)
-                fmpz_set_si(c, x)
+                if isinstance(x, Integer):
+                    fmpz_set_mpz(c, x.value)
+                else:
+                    fmpz_set_si(c, x)
                 fmpz_mpoly_set_coeff_fmpz(poly, c, NULL)
                 fmpz_clear(c)
             return self.element_class(self, poly)
@@ -201,11 +206,14 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         """
         Multiply two polynomials or by a scalar.
         """
-        if isinstance(other, int):
+        if isinstance(other, (int, Integer)):
             cdef fmpz_t c
             cdef fmpz_mpoly_t result
             fmpz_init(c)
-            fmpz_set_si(c, other)
+            if isinstance(other, Integer):
+                fmpz_set_mpz(c, other.value)
+            else:
+                fmpz_set_si(c, other)
             fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
             fmpz_mpoly_scalar_mul_fmpz(result, self._poly, c)
             fmpz_clear(c)
@@ -309,16 +317,18 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
 
     def coefficients(self):
         """
-        Return the list of coefficients of this polynomial.
+        Return the list of coefficients of this polynomial as Sage Integers.
         """
         cdef slong i, length = fmpz_mpoly_length(self._poly)
         cdef fmpz_t coeff
+        cdef mpz_t mpz_coeff
         cdef slong *exps = <slong*>malloc(self._parent._n * sizeof(slong))
         coefficients = []
         fmpz_init(coeff)
         for i in range(length):
             fmpz_mpoly_get_term_coeff_fmpz(coeff, self._poly, i)
-            coefficients.append(int(fmpz_get_si(coeff)))
+            mpz_coeff = fmpz_get_mpz(coeff)
+            coefficients.append(Integer.from_mpz_t(mpz_coeff))
         fmpz_clear(coeff)
         free(exps)
         return coefficients
@@ -332,8 +342,8 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         fmpz_mpoly_set(result, self._poly)
 
         for var, value in kwargs.items():
-            if not isinstance(value, int):
-                raise TypeError(f"Substitution value for {var} must be an integer")
+            if not isinstance(value, (int, Integer)):
+                raise TypeError(f"Substitution value for {var} must be an integer or Integer")
             try:
                 idx = self._parent._names.index(var)
             except ValueError:
@@ -341,7 +351,10 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
 
             cdef fmpz_t val
             fmpz_init(val)
-            fmpz_set_si(val, value)
+            if isinstance(value, Integer):
+                fmpz_set_mpz(val, value.value)
+            else:
+                fmpz_set_si(val, value)
             fmpz_mpoly_evaluate_one_fmpz(result, result, idx, val)
             fmpz_clear(val)
 
