@@ -159,7 +159,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         cdef fmpz_mpoly_t poly
         fmpz_mpoly_init(poly, self._n, self._flint_order)
         fmpz_mpoly_gen(poly, i, self._flint_order)
-        return self.element_class(self, poly)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self, poly)
 
     def gens(self):
         """
@@ -214,7 +214,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         cdef fmpz_mpoly_t poly
         fmpz_mpoly_init(poly, self._n, self._flint_order)
         fmpz_mpoly_zero(poly)
-        return self.element_class(self, poly)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self, poly)
 
     def one(self):
         """
@@ -230,7 +230,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         cdef fmpz_mpoly_t poly
         fmpz_mpoly_init(poly, self._n, self._flint_order)
         fmpz_mpoly_one(poly)
-        return self.element_class(self, poly)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self, poly)
 
     def _element_constructor_(self, x, check=True):
         """
@@ -263,14 +263,14 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
                     fmpz_set_si(c, x)
                 fmpz_mpoly_set_coeff_fmpz(poly, c, NULL)
                 fmpz_clear(c)
-            return self.element_class(self, poly)
+            return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self, poly)
 
         elif isinstance(x, str):
             cdef fmpz_mpoly_t poly
             fmpz_mpoly_init(poly, self._n, self._flint_order)
             if fmpz_mpoly_set_str(poly, x.encode('utf-8')) != 0:
                 raise ValueError(f"Could not parse polynomial from string: {x}")
-            return self.element_class(self, poly)
+            return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self, poly)
 
         elif isinstance(x, MPolynomial_integer_dense_flint):
             return x
@@ -397,7 +397,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
         fmpz_mpoly_add(result, self._poly, other._poly)
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
     def __sub__(self, other):
         """
@@ -416,7 +416,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
         fmpz_mpoly_sub(result, self._poly, other._poly)
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
     def __mul__(self, other):
         """
@@ -445,13 +445,13 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
             fmpz_mpoly_scalar_mul_fmpz(result, self._poly, c)
             fmpz_clear(c)
-            return self._parent.element_class(self._parent, result)
+            return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
         elif not isinstance(other, MPolynomial_integer_dense_flint):
             other = self._parent(other)
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
         fmpz_mpoly_mul(result, self._poly, other._poly)
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
     def __rmul__(self, other):
         """
@@ -482,7 +482,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
         fmpz_mpoly_neg(result, self._poly)
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
     def __pow__(self, exponent):
         """
@@ -517,7 +517,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             fmpz_mpoly_set(result, temp)
 
         fmpz_mpoly_clear(temp)
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
     # Comparison
     def __eq__(self, other):
@@ -685,7 +685,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             fmpz_mpoly_evaluate_one_fmpz(result, result, idx, val)
             fmpz_clear(val)
 
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
     def gcd(self, other):
         """
@@ -704,7 +704,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
         fmpz_mpoly_gcd(result, self._poly, other._poly)
-        return self._parent.element_class(self._parent, result)
+        return MPolynomial_integer_dense_flint._new_from_fmpz_mpoly(self._parent, result)
 
 # Assign the Element class to the parent
 MPolynomialRing_integer_dense_flint.Element = MPolynomial_integer_dense_flint
