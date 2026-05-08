@@ -47,7 +47,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
         Multivariate Polynomial Ring in x, y over Integer Ring (FLINT backend)
         sage: x, y = R.gens()
         sage: x + y
-        fmpz_mpoly(x + y)
+        x + y
     """
     def __init__(self, n, names=None, order='lex'):
         """
@@ -152,9 +152,9 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
             sage: from sage.rings.polynomial.multi_polynomial_integer_dense_flint import MPolynomialRing_integer_dense_flint
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: R.gen(0)
-            fmpz_mpoly(x)
+            x
             sage: R.gen(1)
-            fmpz_mpoly(y)
+            y
         """
         cdef fmpz_mpoly_t poly
         fmpz_mpoly_init(poly, self._n, self._flint_order)
@@ -170,7 +170,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
             sage: from sage.rings.polynomial.multi_polynomial_integer_dense_flint import MPolynomialRing_integer_dense_flint
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: R.gens()
-            (fmpz_mpoly(x), fmpz_mpoly(y))
+            (x, y)
         """
         return tuple(self.gen(i) for i in range(self._n))
 
@@ -209,7 +209,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
             sage: from sage.rings.polynomial.multi_polynomial_integer_dense_flint import MPolynomialRing_integer_dense_flint
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: R.zero()
-            fmpz_mpoly(0)
+            0
         """
         cdef fmpz_mpoly_t poly
         fmpz_mpoly_init(poly, self._n, self._flint_order)
@@ -225,7 +225,7 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
             sage: from sage.rings.polynomial.multi_polynomial_integer_dense_flint import MPolynomialRing_integer_dense_flint
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: R.one()
-            fmpz_mpoly(1)
+            1
         """
         cdef fmpz_mpoly_t poly
         fmpz_mpoly_init(poly, self._n, self._flint_order)
@@ -241,11 +241,11 @@ class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
             sage: from sage.rings.polynomial.multi_polynomial_integer_dense_flint import MPolynomialRing_integer_dense_flint
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: R(1)
-            fmpz_mpoly(1)
+            1
             sage: R(0)
-            fmpz_mpoly(0)
+            0
             sage: R(Integer(5))
-            fmpz_mpoly(5)
+            5
         """
         if isinstance(x, (int, Integer)):
             cdef fmpz_mpoly_t poly
@@ -293,7 +293,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         sage: x, y = R.gens()
         sage: p = x^2 + y
         sage: p
-        fmpz_mpoly(x^2 + y)
+        x^2 + y
     """
     def __init__(self, parent, poly):
         """
@@ -347,9 +347,9 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: repr(x + y)
-            'fmpz_mpoly(x + y)'
+            'x + y'
         """
-        return f"fmpz_mpoly({fmpz_mpoly_get_str(self._poly).decode('utf-8')})"
+        return fmpz_mpoly_get_str(self._poly).decode('utf-8')
 
     def __str__(self):
         """
@@ -390,7 +390,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: (x^2 + y) + (x*y + 1)
-            fmpz_mpoly(x^2 + x*y + y + 1)
+            x^2 + x*y + y + 1
         """
         if not isinstance(other, MPolynomial_integer_dense_flint):
             other = self._parent(other)
@@ -409,7 +409,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: (x^2 + y) - (x*y + 1)
-            fmpz_mpoly(x^2 - x*y + y - 1)
+            x^2 - x*y + y - 1
         """
         if not isinstance(other, MPolynomial_integer_dense_flint):
             other = self._parent(other)
@@ -428,11 +428,11 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: (x + y) * (x - y)
-            fmpz_mpoly(x^2 - y^2)
+            x^2 - y^2
             sage: (x + y) * 2
-            fmpz_mpoly(2*x + 2*y)
+            2*x + 2*y
             sage: 2 * (x + y)
-            fmpz_mpoly(2*x + 2*y)
+            2*x + 2*y
         """
         if isinstance(other, (int, Integer)):
             cdef fmpz_t c
@@ -463,7 +463,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: 3 * (x + y)
-            fmpz_mpoly(3*x + 3*y)
+            3*x + 3*y
         """
         return self.__mul__(other)
 
@@ -477,7 +477,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: -(x + y)
-            fmpz_mpoly(-x - y)
+            -x - y
         """
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
@@ -494,9 +494,9 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: (x + y)^2
-            fmpz_mpoly(x^2 + 2*x*y + y^2)
+            x^2 + 2*x*y + y^2
             sage: (x + y)^0
-            fmpz_mpoly(1)
+            1
         """
         if not isinstance(exponent, int):
             raise TypeError("Exponent must be an integer")
@@ -660,9 +660,9 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: (x^2 + y).subs(x=1, y=2)
-            fmpz_mpoly(3)
+            3
             sage: (x^2 + y).subs(x=Integer(1), y=Integer(2))
-            fmpz_mpoly(3)
+            3
         """
         cdef fmpz_mpoly_t result
         fmpz_mpoly_init(result, self._parent._n, self._parent._flint_order)
@@ -697,7 +697,7 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
             sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
             sage: x, y = R.gens()
             sage: (x^2 - y^2).gcd(x - y)
-            fmpz_mpoly(x - y)
+            x - y
         """
         if not isinstance(other, MPolynomial_integer_dense_flint):
             other = self._parent(other)
