@@ -31,6 +31,16 @@ ORDERING_MAP = {
     'degrevlex': ORDERING_DEGREVLEX,
 }
 
+cdef inline MPolynomial_from_fmpz_mpoly(Parent parent, fmpz_mpoly_t poly):
+        """
+        Create a new element from an fmpz_mpoly_t.
+        """
+        cdef MPolynomial_integer_dense_flint P = <MPolynomial_integer_dense_flint> Parent.__new__(MPolynomial_integer_dense_flint)
+        P._parent = parent
+        P._poly = poly
+        return P
+
+
 # Parent class for the ring
 class MPolynomialRing_integer_dense_flint(MPolynomialRing_base):
     """
@@ -317,25 +327,6 @@ cdef class MPolynomial_integer_dense_flint(MPolynomialElement):
         """
         if self._poly is not None:
             fmpz_mpoly_clear(self._poly)
-
-    @staticmethod
-    cdef _new_from_fmpz_mpoly(parent, fmpz_mpoly_t poly):
-        """
-        Create a new element from an fmpz_mpoly_t.
-
-        TESTS::
-
-            sage: from sage.rings.polynomial.multi_polynomial_integer_dense_flint import MPolynomialRing_integer_dense_flint
-            sage: R = MPolynomialRing_integer_dense_flint(2, ['x', 'y'])
-            sage: x, y = R.gens()
-            sage: p = x + y
-            sage: isinstance(p, MPolynomial_integer_dense_flint)
-            True
-        """
-        cdef MPolynomial_integer_dense_flint P = <MPolynomial_integer_dense_flint>Parent.__new__(MPolynomial_integer_dense_flint)
-        P._parent = parent
-        P._poly = poly
-        return P
 
     def __repr__(self):
         """
